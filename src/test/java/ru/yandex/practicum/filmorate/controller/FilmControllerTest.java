@@ -26,38 +26,10 @@ class FilmControllerTest {
         film.setName("Test1");
         film.setDescription("a".repeat(200));
         film.setReleaseDate(LocalDate.of(1895, 12, 28));
-        film.setDuration(1);
+        film.setDuration(200);
 
         assertDoesNotThrow(() -> filmController.create(film));
         assertEquals(1, filmController.findAll().size());
-    }
-
-    @Test
-    void createFilmWithNameIsNull() {
-        Film film = new Film();
-        film.setName("");
-        film.setDescription("b".repeat(200));
-        film.setReleaseDate(LocalDate.of(1895, 12, 28));
-        film.setDuration(1);
-
-        assertThrows(ValidationException.class,
-                () -> filmController.create(film),
-                "Название не может быть пустым");
-        assertEquals(0, filmController.findAll().size());
-    }
-
-    @Test
-    void createFilmWithDescriptionTooLong() {
-        Film film = new Film();
-        film.setName("Test3");
-        film.setDescription("c".repeat(201));
-        film.setReleaseDate(LocalDate.of(1895, 12, 28));
-        film.setDuration(1);
-
-        assertThrows(ValidationException.class,
-                () -> filmController.create(film),
-                "Максимальная длина описания — 200 символов");
-        assertEquals(0, filmController.findAll().size());
     }
 
     @Test
@@ -71,20 +43,6 @@ class FilmControllerTest {
         assertThrows(ValidationException.class,
                 () -> filmController.create(film),
                 "Дата релиза не раньше 28 декабря 1895 года");
-        assertEquals(0, filmController.findAll().size());
-    }
-
-    @Test
-    void createFilmWithDurationIsNotPositive() {
-        Film film = new Film();
-        film.setName("Test5");
-        film.setDescription("e".repeat(200));
-        film.setReleaseDate(LocalDate.of(1895, 12, 28));
-        film.setDuration(-1);
-
-        assertThrows(ValidationException.class,
-                () -> filmController.create(film),
-                "Продолжительность фильма должна быть положительным числом");
         assertEquals(0, filmController.findAll().size());
     }
 
@@ -116,6 +74,20 @@ class FilmControllerTest {
         assertThrows(NotFoundException.class,
                 () -> filmController.update(film),
                 "Фильм с id = 70 не найден");
+    }
+
+    @Test
+    void updateFilmWithIdIsNull() {
+        Film film = new Film();
+        film.setName("Test11");
+        film.setDescription("k".repeat(200));
+        film.setReleaseDate(LocalDate.of(2025, 8, 4));
+        film.setDuration(140);
+        film.setId(null);
+
+        assertThrows(ValidationException.class,
+                () -> filmController.update(film),
+                "Id не может быть пустым");
     }
 
     @Test

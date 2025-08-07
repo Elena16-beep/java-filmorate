@@ -1,11 +1,16 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import java.time.LocalDate;
+import ru.yandex.practicum.filmorate.validation.Validation;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,28 +28,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@RequestBody User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
-            log.error("Емайл не может быть пустым");
-            throw new ValidationException("Емайл не может быть пустым");
-        }
-
-        if (!user.getEmail().contains("@")) {
-            log.error("Емайл {} должен содержать @", user.getEmail());
-            throw new ValidationException("Емайл должен содержать @");
-        }
-
-        if (user.getLogin() == null || user.getLogin().isBlank() ||
-                user.getLogin().contains(" ")) {
-            log.error("Логин {} не может быть пустым и содержать пробелы", user.getLogin());
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-        }
-
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Дата рождения {} не может быть в будущем", user.getBirthday());
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
-
+    public User create(@Valid @RequestBody User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
@@ -57,32 +41,8 @@ public class UserController {
     }
 
     @PutMapping
-    public User update(@RequestBody User newUser) {
-        if (newUser.getId() == null) {
-            log.error("Id не может быть пустым");
-            throw new ValidationException("Id должен быть указан");
-        }
-
-        if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
-            log.error("Емайл не может быть пустым");
-            throw new ValidationException("Емайл не может быть пустым");
-        }
-
-        if (!newUser.getEmail().contains("@")) {
-            log.error("Емайл {} должен содержать @", newUser.getEmail());
-            throw new ValidationException("Емайл должен содержать @");
-        }
-
-        if (newUser.getLogin() == null || newUser.getLogin().isBlank() ||
-                newUser.getLogin().contains(" ")) {
-            log.error("Логин {} не может быть пустым и содержать пробелы", newUser.getLogin());
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-        }
-
-        if (newUser.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Дата рождения {} не может быть в будущем", newUser.getBirthday());
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
+    public User update(@Valid @RequestBody User newUser) {
+        Validation.validateUser(newUser);
 
         if (users.containsKey(newUser.getId())) {
             User oldUser = users.get(newUser.getId());
@@ -104,7 +64,6 @@ public class UserController {
         throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
     }
 
-    // вспомогательный метод для генерации идентификатора нового поста
     private long getNextId() {
         long currentMaxId = users.keySet()
                 .stream()

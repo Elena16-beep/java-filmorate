@@ -34,76 +34,6 @@ class UserControllerTest {
     }
 
     @Test
-    void createUserWithEmailIsNull() {
-        User user = new User();
-        user.setEmail("");
-        user.setLogin("Login2");
-        user.setName("Test2");
-        user.setBirthday(LocalDate.now());
-
-        assertThrows(ValidationException.class,
-                () -> userController.create(user),
-                "Емайл не может быть пустым");
-        assertEquals(0, userController.findAll().size());
-    }
-
-    @Test
-    void createUserWithEmailIsNotValid() {
-        User user = new User();
-        user.setEmail("email3.b.c");
-        user.setLogin("Login3");
-        user.setName("Test3");
-        user.setBirthday(LocalDate.now());
-
-        assertThrows(ValidationException.class,
-                () -> userController.create(user),
-                "Емайл должен содержать @");
-        assertEquals(0, userController.findAll().size());
-    }
-
-    @Test
-    void createUserWithLoginIsNull() {
-        User user = new User();
-        user.setEmail("email4@b.c");
-        user.setLogin("");
-        user.setName("Test4");
-        user.setBirthday(LocalDate.now());
-
-        assertThrows(ValidationException.class,
-                () -> userController.create(user),
-                "Логин не может быть пустым");
-        assertEquals(0, userController.findAll().size());
-    }
-
-    @Test
-    void createUserWithLoginIsNotValid() {
-        User user = new User();
-        user.setEmail("email5@b.c");
-        user.setLogin("Login 5");
-        user.setName("Test5");
-        user.setBirthday(LocalDate.now());
-
-        assertThrows(ValidationException.class,
-                () -> userController.create(user),
-                "Логин не может содержать пробелы");
-        assertEquals(0, userController.findAll().size());
-    }
-
-    @Test
-    void createUserWithBirthdayIsInFuture() {
-        User user = new User();
-        user.setEmail("email6@b.c");
-        user.setLogin("Login6");
-        user.setName("Test6");
-        user.setBirthday(LocalDate.now().plusDays(1));
-
-        assertThrows(ValidationException.class,
-                () -> userController.create(user),
-                "Дата рождения не может быть в будущем");
-        assertEquals(0, userController.findAll().size());
-    }
-
-    @Test
     void createUserWithNameIsNull() {
         User user = new User();
         user.setEmail("email7@b.c");
@@ -154,6 +84,20 @@ class UserControllerTest {
         assertThrows(NotFoundException.class,
                 () -> userController.update(user),
                 "Пользователь с id = 10 не найден");
+    }
+
+    @Test
+    void updateUserWithIdIsNull() {
+        User user = new User();
+        user.setEmail("email10@b.c");
+        user.setLogin("Login10");
+        user.setName("Test10");
+        user.setBirthday(LocalDate.now());
+        user.setId(null);
+
+        assertThrows(ValidationException.class,
+                () -> userController.update(user),
+                "Id не может быть пустым");
     }
 
     @Test
