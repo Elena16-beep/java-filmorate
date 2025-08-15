@@ -12,11 +12,14 @@ public class Validation {
     public static void validateFilm(Film film, boolean validateId) {
         if (validateId && film.getId() == null) {
             log.error("Id фильма не может быть пустым");
+
             throw new ValidationException("Id фильма должен быть указан");
         }
 
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+        if (film.getReleaseDate() != null
+                && film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             log.error("Дата релиза {} раньше 28 декабря 1895 года", film.getReleaseDate());
+
             throw new ValidationException("Дата релиза не раньше 28 декабря 1895 года");
         }
     }
@@ -24,6 +27,7 @@ public class Validation {
     public static void validateUser(User user) {
         if (user.getId() == null) {
             log.error("Id пользователя не может быть пустым");
+
             throw new ValidationException("Id пользователя должен быть указан");
         }
     }

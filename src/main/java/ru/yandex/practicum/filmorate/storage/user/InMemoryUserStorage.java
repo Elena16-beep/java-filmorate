@@ -63,6 +63,16 @@ public class InMemoryUserStorage implements UserStorage {
         return Optional.ofNullable(users.get(id));
     }
 
+    @Override
+    public void deleteById(Long id) {
+        getUserById(id).ifPresentOrElse(
+                user -> users.remove(id),
+                () -> {
+                    throw new NotFoundException("Пользователь с id =" + id + " не найден");
+                }
+        );
+    }
+
     private long getNextId() {
         long currentMaxId = users.keySet()
                 .stream()
