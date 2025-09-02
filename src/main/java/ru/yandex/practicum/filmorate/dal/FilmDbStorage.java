@@ -45,11 +45,6 @@ public class FilmDbStorage implements FilmStorage {
         Validation.validateFilm(film, false);
         film.setId(getNextId());
 
-        System.out.println("film" + film);
-        System.out.println("film.getRating()" + film.getRating());
-        System.out.println("film.getRating().getId()" + film.getRating().getId());
-        System.out.println("film.getGenres()" + film.getGenres());
-
         String sql = "INSERT INTO film (film_id, name, description, releaseDate, duration, rating_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -99,8 +94,6 @@ public class FilmDbStorage implements FilmStorage {
         Long filmId = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM film WHERE film_id = ?",
                 Long.class, id);
 
-        System.out.println("userId bd " + filmId);
-
         if (filmId == 0) {
             return Optional.empty();
         }
@@ -119,12 +112,6 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
         jdbcTemplate.update(sql, filmId, userId);
     }
-
-//    public List<Long> getLikesByFilmId(Long id) {
-//        String sql = "SELECT l.* FROM like l WHERE l.film_id = ? ORDER BY film_id";
-//
-//        return jdbcTemplate.query(sql, this::mapRowFilm, id));
-//    }
 
     public Map<Long, Set<Long>> getLikesForFilms(Collection<Long> filmIds) {
         String sql = String.format(

@@ -39,8 +39,6 @@ public class FilmService {
         ratingDbStorage.getRatingById(film.getRating().getId());
         genreDbStorage.validateGenre(film);
 
-//        ratingService.getById(film.getRating().getId());
-
         return filmStorage.create(film);
     }
 
@@ -71,11 +69,6 @@ public class FilmService {
     }
 
     public List<Film> getPopular(int count) {
-//        return filmStorage.findAll()
-//                .stream()
-//                .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
-//                .limit(count)
-//                .collect(Collectors.toList());
         return filmStorage.getPopular(count);
     }
 

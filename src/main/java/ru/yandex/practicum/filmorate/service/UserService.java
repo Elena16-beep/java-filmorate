@@ -30,11 +30,8 @@ public class UserService {
     }
 
     public User update(User user) {
-//        getById(user.getId());
-        User newUser = userStorage.getUserById(user.getId())
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + user.getId() + " не найден"));
-
-        System.out.println("serviceuser " + newUser);
+//        User newUser = userStorage.getUserById(user.getId())
+//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + user.getId() + " не найден"));
 
         return userStorage.update(user);
     }
@@ -67,31 +64,8 @@ public class UserService {
         User user = userStorage.getUserById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден"));
 
-//        return user.getFriends().stream()
-//                .map(userStorage::getUserById)
-//                .map(opt -> opt.orElse(null))
-//                .filter(Objects::nonNull)
-//                .collect(Collectors.toList());
-
         return userStorage.getFriends(id);
     }
-
-//    public List<Long> getCommonFriends(Long userId, Long otherId) {
-//        User user = userStorage.getUserById(userId)
-//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-//
-//        User otherUser = userStorage.getUserById(otherId)
-//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + otherId + " не найден"));
-//
-////        return user.getFriends().stream()
-////                .filter(friendId -> otherUser.getFriends().contains(friendId))
-////                .map(userStorage::getUserById)
-////                .map(opt -> opt.orElse(null))
-////                .filter(Objects::nonNull)
-////                .collect(Collectors.toList());
-//
-//        return userStorage.getCommonFriends(userId, otherId);
-//    }
 
     public Collection<User> getCommonFriends(Long userId, Long friendId) {
         var friendsList = userStorage.getCommonFriends(friendId);

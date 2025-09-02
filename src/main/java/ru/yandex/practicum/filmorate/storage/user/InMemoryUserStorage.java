@@ -96,25 +96,9 @@ public class InMemoryUserStorage implements UserStorage {
                 .collect(Collectors.toList());
     }
 
-//    @Override
-//    public List<Long> getCommonFriends(Long userId, Long otherId) {
-//        User user = getUserById(userId)
-//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-//
-//        User otherUser = getUserById(otherId)
-//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + otherId + " не найден"));
-//
-//        return user.getFriends().stream()
-//                .filter(friendId -> otherUser.getFriends().contains(friendId))
-////                .map(this::getUserById)
-////                .map(opt -> opt.orElse(null))
-//                .filter(Objects::nonNull)
-//                .collect(Collectors.toList());
-//    }
-
-public Collection<User> getCommonFriends(Long id) {
-    return null;
-}
+    public Collection<User> getCommonFriends(Long id) {
+        return null;
+    }
 
     private long getNextId() {
         long currentMaxId = users.keySet()

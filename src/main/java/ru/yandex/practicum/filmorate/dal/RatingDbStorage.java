@@ -28,12 +28,8 @@ public class RatingDbStorage {
     public Optional<Rating> getRatingById(int id) {
         String sql = "SELECT r.* FROM rating r WHERE r.rating_id = ?";
 
-//        return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapRowRating, id));
-
         Integer ratingId = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM rating WHERE rating_id = ?",
                 Integer.class, id);
-
-        System.out.println("ratingId bd " + ratingId);
 
         if (ratingId != 0) {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sql, this::mapRowRating, id));
