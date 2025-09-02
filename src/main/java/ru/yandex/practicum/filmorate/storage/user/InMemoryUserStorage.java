@@ -7,8 +7,11 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validation.Validation;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -72,6 +75,46 @@ public class InMemoryUserStorage implements UserStorage {
                 }
         );
     }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+    }
+
+    @Override
+    public void deleteFriend(Long userId, Long friendId) {
+    }
+
+    @Override
+    public List<User> getFriends(Long id) {
+        User user = getUserById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден"));
+
+        return user.getFriends().stream()
+                .map(this::getUserById)
+                .map(opt -> opt.orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+//    @Override
+//    public List<Long> getCommonFriends(Long userId, Long otherId) {
+//        User user = getUserById(userId)
+//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+//
+//        User otherUser = getUserById(otherId)
+//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + otherId + " не найден"));
+//
+//        return user.getFriends().stream()
+//                .filter(friendId -> otherUser.getFriends().contains(friendId))
+////                .map(this::getUserById)
+////                .map(opt -> opt.orElse(null))
+//                .filter(Objects::nonNull)
+//                .collect(Collectors.toList());
+//    }
+
+public Collection<User> getCommonFriends(Long id) {
+    return null;
+}
 
     private long getNextId() {
         long currentMaxId = users.keySet()

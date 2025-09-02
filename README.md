@@ -6,7 +6,7 @@
 
 ### Схема БД
 
-![Схема БД](src\main\resources\DB.png)
+![Схема БД](\src\main\resources\DB.png)
 
 ### Примеры запросов
 

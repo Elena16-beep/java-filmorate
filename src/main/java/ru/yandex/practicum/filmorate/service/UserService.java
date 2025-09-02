@@ -2,13 +2,13 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -17,7 +17,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -30,6 +30,12 @@ public class UserService {
     }
 
     public User update(User user) {
+//        getById(user.getId());
+        User newUser = userStorage.getUserById(user.getId())
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + user.getId() + " не найден"));
+
+        System.out.println("serviceuser " + newUser);
+
         return userStorage.update(user);
     }
 
@@ -42,6 +48,7 @@ public class UserService {
 
         user.getFriends().add(friendId);
         friend.getFriends().add(userId);
+        userStorage.addFriend(userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -53,31 +60,43 @@ public class UserService {
 
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
+        userStorage.deleteFriend(userId, friendId);
     }
 
     public List<User> getFriends(Long id) {
         User user = userStorage.getUserById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден"));
 
-        return user.getFriends().stream()
-                .map(userStorage::getUserById)
-                .map(opt -> opt.orElse(null))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+//        return user.getFriends().stream()
+//                .map(userStorage::getUserById)
+//                .map(opt -> opt.orElse(null))
+//                .filter(Objects::nonNull)
+//                .collect(Collectors.toList());
+
+        return userStorage.getFriends(id);
     }
 
-    public List<User> getCommonFriends(Long userId, Long otherId) {
-        User user = userStorage.getUserById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+//    public List<Long> getCommonFriends(Long userId, Long otherId) {
+//        User user = userStorage.getUserById(userId)
+//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+//
+//        User otherUser = userStorage.getUserById(otherId)
+//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + otherId + " не найден"));
+//
+////        return user.getFriends().stream()
+////                .filter(friendId -> otherUser.getFriends().contains(friendId))
+////                .map(userStorage::getUserById)
+////                .map(opt -> opt.orElse(null))
+////                .filter(Objects::nonNull)
+////                .collect(Collectors.toList());
+//
+//        return userStorage.getCommonFriends(userId, otherId);
+//    }
 
-        User otherUser = userStorage.getUserById(otherId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + otherId + " не найден"));
-
-        return user.getFriends().stream()
-                .filter(friendId -> otherUser.getFriends().contains(friendId))
-                .map(userStorage::getUserById)
-                .map(opt -> opt.orElse(null))
-                .filter(Objects::nonNull)
+    public Collection<User> getCommonFriends(Long userId, Long friendId) {
+        var friendsList = userStorage.getCommonFriends(friendId);
+        return userStorage.getCommonFriends(userId).stream()
+                .filter(friendsList::contains)
                 .collect(Collectors.toList());
     }
 
