@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -13,13 +13,10 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
-
-    @Autowired
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
 
     public Collection<User> findAll() {
         return userStorage.findAll();
@@ -30,9 +27,6 @@ public class UserService {
     }
 
     public User update(User user) {
-//        User newUser = userStorage.getUserById(user.getId())
-//                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + user.getId() + " не найден"));
-
         return userStorage.update(user);
     }
 
@@ -43,8 +37,6 @@ public class UserService {
         User friend = userStorage.getUserById(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
         userStorage.addFriend(userId, friendId);
     }
 
@@ -55,8 +47,6 @@ public class UserService {
         User friend = userStorage.getUserById(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
         userStorage.deleteFriend(userId, friendId);
     }
 

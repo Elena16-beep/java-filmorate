@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.GenreDbStorage;
@@ -15,37 +15,35 @@ import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FilmService {
+    @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
+
     private final RatingDbStorage ratingDbStorage;
     private final GenreDbStorage genreDbStorage;
-
-    @Autowired
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
-                       @Qualifier("userDbStorage") UserStorage userStorage,
-                       RatingDbStorage ratingDbStorage, GenreDbStorage genreDbStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-        this.ratingDbStorage = ratingDbStorage;
-        this.genreDbStorage = genreDbStorage;
-    }
 
     public Collection<Film> findAll() {
         return filmStorage.findAll();
     }
 
     public Film create(Film film) {
-        ratingDbStorage.getRatingById(film.getRating().getId());
-        genreDbStorage.validateGenre(film);
+        if (ratingDbStorage != null && genreDbStorage != null) {
+            ratingDbStorage.getRatingById(film.getRating().getId());
+            genreDbStorage.validateGenre(film);
+        }
 
         return filmStorage.create(film);
     }
 
     public Film update(Film film) {
-        getById(film.getId());
-        ratingDbStorage.getRatingById(film.getRating().getId());
-        genreDbStorage.validateGenre(film);
+        if (ratingDbStorage != null && genreDbStorage != null) {
+            ratingDbStorage.getRatingById(film.getRating().getId());
+            genreDbStorage.validateGenre(film);
+        }
 
         return filmStorage.update(film);
     }

@@ -1,13 +1,15 @@
 package ru.yandex.practicum.filmorate.dal;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.service.GenreService;
+import ru.yandex.practicum.filmorate.service.RatingService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.validation.Validation;
 import java.sql.ResultSet;
@@ -22,16 +24,12 @@ import java.util.Optional;
 import java.util.Set;
 
 @Component
+@RequiredArgsConstructor
 @Qualifier("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final GenreService genreService;
-
-    @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate, GenreService genreService) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.genreService = genreService;
-    }
+    private final RatingService ratingService;
 
     @Override
     public Collection<Film> findAll() {
@@ -45,8 +43,10 @@ public class FilmDbStorage implements FilmStorage {
         Validation.validateFilm(film, false);
         film.setId(getNextId());
 
-        String sql = "INSERT INTO film (film_id, name, description, releaseDate, duration, rating_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = """
+                INSERT INTO film (film_id, name, description, release_date, duration, rating_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """;
 
         jdbcTemplate.update(sql,
                 film.getId(),
@@ -63,6 +63,8 @@ public class FilmDbStorage implements FilmStorage {
             });
         }
 
+        film.setRating(ratingService.getById(film.getRating().getId()));
+
         return film;
     }
 
@@ -70,7 +72,14 @@ public class FilmDbStorage implements FilmStorage {
     public Film update(Film film) {
         Validation.validateFilm(film, true);
 
-        String sql = "UPDATE film SET name = ?, description = ?, releaseDate = ?, duration = ?, rating_id = ? WHERE film_id = ?";
+        Film newFilm = getFilmById(film.getId())
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
+
+        String sql = """
+                UPDATE film SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ?
+                WHERE film_id = ?
+                """;
+
         int rowsUpdated = jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
@@ -83,13 +92,28 @@ public class FilmDbStorage implements FilmStorage {
             throw new InternalServerException("Не удалось обновить данные");
         }
 
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            String genreSql = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
+
+            film.getGenres().forEach(genre -> {
+                jdbcTemplate.update(genreSql, film.getId(), genre.getId());
+            });
+
+            film.getGenres().clear();
+        }
+
+        film.getGenres().addAll(genreService.getGenresByFilmId(film.getId()));
+        film.setRating(ratingService.getById(film.getRating().getId()));
+
         return film;
     }
 
     @Override
     public Optional<Film> getFilmById(Long id) {
-        String sql = "SELECT f.*, r.name rating_name FROM film f INNER JOIN rating r ON f.rating_id = r.rating_id " +
-                "WHERE f.film_id = ?";
+        String sql = """
+                SELECT f.*, r.name rating_name FROM film f INNER JOIN rating r ON f.rating_id = r.rating_id
+                WHERE f.film_id = ?
+                """;
 
         Long filmId = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM film WHERE film_id = ?",
                 Long.class, id);
@@ -129,6 +153,14 @@ public class FilmDbStorage implements FilmStorage {
         return likesMap;
     }
 
+    public Set<Long> getLikesByFilmId(Long id) {
+        String sql = "SELECT l.user_id FROM likes l WHERE l.film_id = ? ORDER BY film_id";
+
+        return new HashSet<>(jdbcTemplate.query(sql,
+                (resultSet, rowNum) -> resultSet.getLong("user_id"),
+                id));
+    }
+
     @Override
     public void deleteById(Long id) {
         String sql = "DELETE FROM film WHERE film_id = ?";
@@ -137,12 +169,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getPopular(int count) {
-        String sql = "SELECT f.*, r.name rating_name FROM film f " +
-                "INNER JOIN rating r ON f.rating_id = r.rating_id " +
-                "LEFT JOIN likes l ON f.film_id = l.film_id " +
-                "GROUP BY f.film_id " +
-                "ORDER BY COUNT(l.user_id) DESC " +
-                "LIMIT ?";
+        String sql = """
+                SELECT f.*, r.name rating_name FROM film f
+                INNER JOIN rating r ON f.rating_id = r.rating_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                GROUP BY f.film_id
+                ORDER BY COUNT(l.user_id) DESC
+                LIMIT ?
+                """;
 
         return jdbcTemplate.query(sql, this::mapRowFilm, count);
     }
@@ -152,7 +186,7 @@ public class FilmDbStorage implements FilmStorage {
         film.setId(resultSet.getLong("film_id"));
         film.setName(resultSet.getString("name"));
         film.setDescription(resultSet.getString("description"));
-        film.setReleaseDate(resultSet.getDate("releaseDate").toLocalDate());
+        film.setReleaseDate(resultSet.getDate("release_date").toLocalDate());
         film.setDuration(resultSet.getInt("duration"));
 
         Rating rating = new Rating();
@@ -160,8 +194,7 @@ public class FilmDbStorage implements FilmStorage {
         rating.setName(resultSet.getString("rating_name"));
         film.setRating(rating);
         film.getGenres().addAll(genreService.getGenresByFilmId(film.getId()));
-        film.setLikes(getLikesForFilms(Collections.singleton(film.getId()))
-                .getOrDefault(film.getId(), Collections.emptySet()));
+        film.setLikes(getLikesByFilmId(film.getId()));
 
         return film;
     }
@@ -170,6 +203,6 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT COALESCE(MAX(film_id), 0) FROM film";
         Long id = jdbcTemplate.queryForObject(sql, Long.class);
 
-        return (id != null) ? id + 1 : 0;
+        return id != null ? id + 1 : 0;
     }
 }

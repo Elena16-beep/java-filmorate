@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.RatingDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -10,13 +10,9 @@ import java.util.Collection;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RatingService {
     private final RatingDbStorage ratingDbStorage;
-
-    @Autowired
-    public RatingService(RatingDbStorage ratingDbStorage) {
-        this.ratingDbStorage = ratingDbStorage;
-    }
 
     public Collection<Rating> findAll() {
         return ratingDbStorage.findAll();

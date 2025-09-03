@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.dal;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -11,13 +11,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class RatingDbStorage {
     private final JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    public RatingDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     public Collection<Rating> findAll() {
         String sql = "SELECT r.* FROM rating r ORDER BY rating_id";

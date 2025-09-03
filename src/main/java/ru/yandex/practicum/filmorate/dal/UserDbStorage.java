@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.dal;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -12,18 +12,16 @@ import ru.yandex.practicum.filmorate.validation.Validation;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
+@RequiredArgsConstructor
 @Qualifier("userDbStorage")
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    public UserDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public Collection<User> findAll() {
@@ -91,7 +89,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void addFriend(Long userId, Long friendId) {
-        String sql = "INSERT INTO friendship (user_id, friend_id, isConfirmed) VALUES (?, ?, true)";
+        String sql = "INSERT INTO friendship (user_id, friend_id, confirmed) VALUES (?, ?, true)";
         jdbcTemplate.update(sql, userId, friendId);
     }
 
@@ -108,10 +106,20 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.query(sql, this::mapRowUser, id);
     }
 
+    public Set<Long> getFriendsByUserId(Long id) {
+        String sql = "SELECT u.* FROM users u INNER JOIN friendship f on u.user_id = f.friend_id WHERE f.user_id = ?";
+
+        return new HashSet<>(jdbcTemplate.query(sql,
+                (resultSet, rowNum) -> resultSet.getLong("user_id"),
+                id));
+    }
+
     @Override
     public Collection<User> getCommonFriends(Long id) {
-        return jdbcTemplate.query("SELECT u.user_id, name, email, login, birthday " +
-                        "FROM users u JOIN friendship f on u.user_id = f.friend_id WHERE f.user_id = ?",
+        return jdbcTemplate.query("""
+                        SELECT u.user_id, name, email, login, birthday
+                        FROM users u JOIN friendship f on u.user_id = f.friend_id WHERE f.user_id = ?
+                        """,
                 this::mapRowUser, id);
     }
 
@@ -122,6 +130,7 @@ public class UserDbStorage implements UserStorage {
         user.setLogin(resultSet.getString("login"));
         user.setName(resultSet.getString("name"));
         user.setBirthday(resultSet.getDate("birthday").toLocalDate());
+        user.setFriends(getFriendsByUserId(user.getId()));
 
         return user;
     }
@@ -130,6 +139,6 @@ public class UserDbStorage implements UserStorage {
         String sql = "SELECT COALESCE(MAX(user_id), 0) FROM users";
         Long id = jdbcTemplate.queryForObject(sql, Long.class);
 
-        return (id != null) ? id + 1 : 0;
+        return id != null ? id + 1 : 0;
     }
 }

@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.dal;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -13,13 +13,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class GenreDbStorage {
     private final JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    public GenreDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     public Collection<Genre> findAll() {
         String sql = "SELECT g.* FROM genre g ORDER BY genre_id";
@@ -52,9 +48,11 @@ public class GenreDbStorage {
     }
 
     public List<Genre> getGenresByFilmId(Long id) {
-        String sql = "SELECT g.* FROM genre g " +
-                "INNER JOIN film_genre fg ON fg.genre_id = g.genre_id " +
-                "WHERE fg.film_id = ? ORDER BY genre_id";
+        String sql = """
+                SELECT g.* FROM genre g
+                INNER JOIN film_genre fg ON fg.genre_id = g.genre_id
+                WHERE fg.film_id = ? ORDER BY genre_id
+                """;
 
         return jdbcTemplate.query(sql, this::mapRowGenre, id);
     }
