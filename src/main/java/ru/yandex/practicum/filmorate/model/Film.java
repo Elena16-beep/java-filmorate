@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -28,4 +29,9 @@ public class Film {
     private int duration;
 
     private Set<Long> likes = new HashSet<>();
+
+    @JsonProperty("mpa")
+    private Rating rating;
+
+    private Set<Genre> genres = new HashSet<>();
 }

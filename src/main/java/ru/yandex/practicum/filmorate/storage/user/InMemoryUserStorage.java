@@ -7,8 +7,11 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validation.Validation;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -71,6 +74,34 @@ public class InMemoryUserStorage implements UserStorage {
                     throw new NotFoundException("Пользователь с id =" + id + " не найден");
                 }
         );
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        getUserById(userId).get().getFriends().add(friendId);
+        getUserById(friendId).get().getFriends().add(userId);
+    }
+
+    @Override
+    public void deleteFriend(Long userId, Long friendId) {
+        getUserById(userId).get().getFriends().remove(friendId);
+        getUserById(friendId).get().getFriends().remove(userId);
+    }
+
+    @Override
+    public List<User> getFriends(Long id) {
+        User user = getUserById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден"));
+
+        return user.getFriends().stream()
+                .map(this::getUserById)
+                .map(opt -> opt.orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    public Collection<User> getCommonFriends(Long id) {
+        return null;
     }
 
     private long getNextId() {

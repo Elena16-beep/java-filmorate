@@ -1,37 +1,50 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.GenreDbStorage;
+import ru.yandex.practicum.filmorate.dal.RatingDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FilmService {
+    @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
 
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
+    private final RatingDbStorage ratingDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
     public Collection<Film> findAll() {
         return filmStorage.findAll();
     }
 
     public Film create(Film film) {
+        if (ratingDbStorage != null && genreDbStorage != null) {
+            ratingDbStorage.getRatingById(film.getRating().getId());
+            genreDbStorage.validateGenre(film);
+        }
+
         return filmStorage.create(film);
     }
 
     public Film update(Film film) {
+        if (ratingDbStorage != null && genreDbStorage != null) {
+            ratingDbStorage.getRatingById(film.getRating().getId());
+            genreDbStorage.validateGenre(film);
+        }
+
         return filmStorage.update(film);
     }
 
@@ -54,11 +67,7 @@ public class FilmService {
     }
 
     public List<Film> getPopular(int count) {
-        return filmStorage.findAll()
-                .stream()
-                .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
-                .limit(count)
-                .collect(Collectors.toList());
+        return filmStorage.getPopular(count);
     }
 
     public Film getById(Long id) {

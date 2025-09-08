@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.dal.GenreDbStorage;
+import ru.yandex.practicum.filmorate.dal.RatingDbStorage;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -19,13 +21,17 @@ class FilmorateApplicationTests {
     UserController userController;
     FilmStorage filmStorage = new InMemoryFilmStorage();
     UserStorage userStorage = new InMemoryUserStorage();
+    RatingDbStorage ratingDbStorage;
+    GenreDbStorage genreDbStorage;
 
     @BeforeEach
     void setUp() {
         filmController = new FilmController(
                 new FilmService(
                         filmStorage,
-                        userStorage
+                        userStorage,
+                        ratingDbStorage,
+                        genreDbStorage
                 )
         );
 

@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.yandex.practicum.filmorate.dal.GenreDbStorage;
+import ru.yandex.practicum.filmorate.dal.RatingDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -21,13 +23,17 @@ class FilmControllerTest {
     FilmController filmController;
     FilmStorage filmStorage = new InMemoryFilmStorage();
     UserStorage userStorage = new InMemoryUserStorage();
+    RatingDbStorage ratingDbStorage = null;
+    GenreDbStorage genreDbStorage = null;
 
     @BeforeEach
     void setUp() {
         filmController = new FilmController(
                 new FilmService(
                         filmStorage,
-                        userStorage
+                        userStorage,
+                        ratingDbStorage,
+                        genreDbStorage
                 )
         );
     }
